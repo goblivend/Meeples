@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mutant Meeples</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <div id="gameInfo">Game Information</div>
+    </header>
+    <main>
+        <div id="gameBoard" class="panel">
+            <canvas id="backBoard"></canvas>
+            <canvas id="meeples"></canvas>
+            <canvas id="moves"></canvas>
+        </div>
+        <div id="subcomponents" class="panel">
+            <div class="button-container">
+                <button id="resetButton">Reset Run</button>
+                <button id="submitButton">Submit Solution</button>
+                <div id="timer"></div>
+            </div>
+            <div id="players">
+            </div>
+        </div>
+    </main>
+</body>
+
+<style>
+    main {
+        display: flex;
+        flex-direction: row;
+    }
+
+    #gameBoard {
+        position: relative;
+        margin: 20px;
+        aspect-ratio: 1 / 1;
+        width: calc(100vh);
+        max-width: calc(100vw - 40px);
+
+        box-sizing: border-box;
+    }
+
+    #subcomponents {
+        flex-grow: 1;
+        height: auto;
+    }
+
+    canvas {
+        left: 0px;
+        top: 0px;
+    }
+
+    /* canvas {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    } */
+
+    #backBoard {
+        position: absolute;
+
+        /* Background layer */
+        z-index: 0;
+
+        width: 100%;
+        height: 100%;
+    }
+
+    #meeples {
+        position: absolute;
+
+        /* Middleground layer */
+        z-index: 1;
+
+        width: 100%;
+        height: 100%;
+    }
+
+    #moves {
+        position: absolute;
+
+        /* Foreground layer */
+        z-index: 2;
+
+        width: 100%;
+        height: 100%;
+    }
+
+    .playerItem {
+        border: 2px solid black;
+        margin-bottom: 20px;
+    }
+
+    .playerNameDiv {
+        display: flex;
+    }
+
+    .panel {
+        border: 2px solid red;
+    }
+
+    /*
+    .playerNameDiv {
+        margin: 10px 10px;
+    } */
+
+    .playerNameConstant {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .playerNameVariable {}
+
+    .playerMeeples {
+        display: flex;
+    }
+
+    .meepleCanvas {
+        margin: 5px;
+        margin-left: 1%;
+        /* position: relative;
+        width: 100%;
+        height: 100%; */
+    }
+
+    .usingMeeple {
+        display: flex;
+    }
+
+    .button-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    #timer {
+        font-size: 16px;
+        padding: 10px;
+    }
+</style>
+
+<script src="config.js"></script>
+<script src="utils.js"></script>
+<script src="board.js"></script>
+<script src="players.js"></script>
+<script>
+    console.log('Scripts loading');
+
+    console.log('Game interface loaded');
+    console.log('Game ID:', sessionStorage.getItem('gameId'));
+    console.log('User Name:', sessionStorage.getItem('userName'));
+    console.log('User Id:', sessionStorage.getItem('userId'));
+
+    const gameId = sessionStorage.getItem('gameId');
+    const userName = sessionStorage.getItem('userName');
+    const userId = sessionStorage.getItem('userId');
+
+    // Fetch the board data from the server
+    function displayBoard() {
+        return fetch(`${serverUrl}${gamePrefix}/game/${gameId}/board`)
+            .then(response => response.json())
+            .then(drawBoard)
+            .catch(error => {
+                console.error('Error fetching board data:', error);
+            })
+            .then(_ => {
+                fetch(`${serverUrl}${gamePrefix}/game/${gameId}/meeples?userId=${userId}`)
+                    .then(response => response.json())
+                    .then(drawMeeples)
+                    .catch(error => {
+                        console.error('Error fetching meeple data:', error);
+                    });
+            });
+    }
+
+    displayBoard()
+        .then(fetchPlayers)
+        .then(setPlayers)
+
+    window.addEventListener('resize', () => {
+        // displayBoard();
+        // fetchPlayers()
+        //     .then(setPlayers)
+
+        displayBoard()
+            .then(fetchPlayers)
+            .then(setPlayers)
+
+    });
+
+    const canvas = document.getElementById('gameBoard');
+
+    // Add event listener for click events to get the cell coordinates
+    canvas.addEventListener('click', (event) => {
+        const cellSize = sessionStorage.getItem("cellSize")
+
+        const rect = canvas.getBoundingClientRect();
+
+        console.log(rect)
+
+        // TODO : Remove magic values
+        const x = (event.clientX - rect.left) / rect.width * canvas.width;
+        const y = (event.clientY - rect.top) / rect.height * canvas.height;
+        const cellX = Math.floor(x / cellSize);
+        const cellY = Math.floor(y / cellSize);
+        console.log(`Clicked On Screen : (${event.clientX}, ${event.clientY})`)
+        console.log(`Cellsize of : ${cellSize}`)
+        console.log(`Clicked pos : (${x}, ${y})`);
+        console.log(`Clicked cell: (${cellX}, ${cellY})`);
+
+        const selected = sessionStorage.getItem('selectedMeeple');
+
+        meeplesPos = JSON.parse(sessionStorage.getItem('meeplesPos'));
+        const meepleHere = meeplesPos.some(m => m.x === cellX && m.y === cellY);
+
+        console.log('Selected Meeple:', selected);
+        if (meepleHere) {
+            console.log('No meeple selected, selecting meeple');
+
+            sessionStorage.setItem('selectedMeeple', JSON.stringify({ x: cellX, y: cellY }));
+
+            fetch(`${serverUrl}${gamePrefix}/game/${gameId}/moves?userId=${userId}&x=${cellX}&y=${cellY}`)
+                .then(response => response.json())
+                .then(drawMoves)
+                .catch(error => {
+                    console.error('Error Getting moves data:', error);
+                });
+        } else if (selected !== null) {
+            const selectedMeeple = JSON.parse(selected);
+            console.log('Moving Selected Meeple: ', selected, ' to ', { x: cellX, y: cellY });
+            // Move the meeple
+            fetch(`${serverUrl}${gamePrefix}/game/${gameId}/move?userId=${userId}&srcX=${selectedMeeple.x}&srcY=${selectedMeeple.y}&dstX=${cellX}&dstY=${cellY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    // Update the board
+                    console.log("Redisplaying the board after move")
+                    displayBoard();
+                    fetchPlayers()
+                        .then(setPlayers);
+                    // Clear the selected meeple
+                    sessionStorage.removeItem('selectedMeeple');
+                })
+
+                .catch(error => {
+                    console.error('Error moving meeple:', error);
+                });
+        }
+    });
+
+    document.getElementById('resetButton').addEventListener('click', (e) => {
+        console.log('Reset Run button clicked');
+        fetch(`${serverUrl}${gamePrefix}/game/${gameId}/move?userId=${userId}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                displayBoard()
+                    .then(fetchPlayers)
+                    .then(setPlayers)
+
+            });
+
+    });
+
+    document.getElementById('submitButton').addEventListener('click', (e) => {
+        console.log('Submit Solution button clicked');
+        fetch(`${serverUrl}${gamePrefix}/game/${gameId}/move/select?userId=${userId}`, {
+            method: 'PUT'
+        });
+
+    });
+
+    function updateTimer() {
+        fetch(`${serverUrl}${gamePrefix}/game/${gameId}/timer`)
+            .then(response => response.json())
+            .then(data => {
+                // need to convert from secs to mins:secs
+                const newTime = convertTimeToTimer(data.time);
+
+                if (newTime !== document.getElementById('timer').textContent) {
+                    displayBoard()
+                        .then(fetchPlayers)
+                        .then(setPlayers);
+                }
+
+                document.getElementById('timer').textContent = newTime;
+            })
+            .catch(error => {
+                console.error('Error fetching timer data:', error);
+            });
+    }
+
+    updateTimer();
+    setInterval(updateTimer, 500);
+
+</script>
+
+</html>
