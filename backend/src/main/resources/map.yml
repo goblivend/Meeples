@@ -1,0 +1,17 @@
+name: "simple sample"
+width: 8
+height: 8
+meeples:
+  - color: red
+    posX: 0
+    posY: 0
+walls:
+  vertical:
+    - x: 2
+      y: 2
+  horizontal:
+    - x: 2
+      y: 2
+beams:
+  - x: 0
+    y: 0
