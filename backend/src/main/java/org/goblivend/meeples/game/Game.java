@@ -3,6 +3,9 @@ package org.goblivend.meeples.game;
 import lombok.Getter;
 import org.goblivend.meeples.utils.Tuple;
 import org.goblivend.meeples.utils.Utils;
+import org.goblivend.meeples.ws.MutantMeepleWS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Instant;
@@ -22,6 +25,8 @@ import static org.goblivend.meeples.game.Direction.*;
 
 
 public class Game {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Game.class);
+    private final Random rd = new Random();
     private final String name;
     @Getter
     private final Dimension dim;
@@ -36,7 +41,7 @@ public class Game {
     @Getter
     private Point target;
     private Instant timerStart;
-    private Integer timerDuration = 60;
+    private final Integer timerDuration = 10;
     @Getter
     private boolean timerRunning = false;
 
@@ -159,14 +164,16 @@ public class Game {
     }
 
     private void generateTarget() {
-        Random rd = new Random();
         target = new Point(rd.nextInt(dim.width), rd.nextInt(dim.height));
 
-        if (Utils.isExtremeCorner(target, dim) || !meeples.containsValue(target)) {
+        // If meeple at target or out of grid, generate new target
+        if (Utils.isExtremeCorner(target, dim) || meeples.containsValue(target)) {
             generateTarget();
+            return;
         }
 
         players.values().forEach(p -> p.setTarget(target));
+        LOGGER.info("New target: {}", target);
     }
 
     public Map<MeepleType, Point> getMeeples(Integer playerId) {
@@ -238,10 +245,17 @@ public class Game {
         var timeLeft = timerDuration - (int) (Instant.now().getEpochSecond() - timerStart.getEpochSecond());
         if (timeLeft <= 0) {
             timerRunning = false;
-            selectedSolutions = new HashMap<>();
+            this.meeples = selectedSolutions.entrySet()
+                    .stream()
+                    .min(Comparator.comparingInt(e -> e.getValue().t1()))
+                    .map(Map.Entry::getKey)
+                    .map(players::get)
+                    .map(Player::getMeeples)
+                    .orElse(new HashMap<>(meeples));
             generateTarget();
             // TODO: Get best solution and save it as current turn
             players.values().forEach(player -> player.resetPlaying(new HashMap<>(meeples)));
+            selectedSolutions = new HashMap<>();
             return 0;
         } // TODO: Add possibility to showcase the best solution
 

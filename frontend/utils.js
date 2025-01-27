@@ -12,6 +12,17 @@ function createCursor(size) {
     ]
 }
 
+function createCheckMark(size) {
+    return [
+        {x: 3/10 * size, y: 6/10 * size},
+        {x: 8/10 * size, y: 1/10 * size},
+        {x: 9/10 * size, y: 2/10 * size},
+        {x: 3/10 * size, y: 8/10 * size},
+        {x: 1/10 * size, y: 6/10 * size},
+        {x: 2/10 * size, y: 5/10 * size},
+    ]
+}
+
 function movePolygon(polygon, pos) {
     const cellSize = sessionStorage.getItem('cellSize');
     return polygon.map(p => {
@@ -35,6 +46,7 @@ function drawPolygon(ctx, polygon, color) {
     ctx.closePath(); // Close the path (back to the start)
     ctx.fillStyle = color;
     ctx.fill(); // Fill the shape
+
 }
 
 

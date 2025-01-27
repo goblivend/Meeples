@@ -79,6 +79,9 @@ function setPlayers(players) {
         playerItem.appendChild(playerMeeplesDiv);
 
         console.log(meepleSize);
+        console.log('######### #############')
+        console.log(player)
+        console.log('######### #############')
 
         player.meeples.forEach(meeple => {
             console.log(meeple)
@@ -92,7 +95,12 @@ function setPlayers(players) {
 
             meepleCtx.fillStyle = getMeepleColor(meeple.meepleType);
             meepleCtx.fillRect(0, 0, meepleSize, meepleSize);
+            if (meeple.used) {
+                // Draw a polygon to indicate meeple in super team
+                meepleCtx.strokeStyle = "rgb(0, 0, 0)"
+                drawPolygon(meepleCtx, createCheckMark(meepleSize), "rgb(107, 253, 107)")
 
+            }
         })
     })
 

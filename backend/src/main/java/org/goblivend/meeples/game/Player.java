@@ -10,6 +10,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
@@ -33,7 +34,7 @@ public class Player {
     private List<Point> beams; // Game Dependant
     private Point target; // Turn Dependant
     private Map<MeepleType, Point> meeples; // Turn Dependant
-    private final Map<MeepleType, Supplier<List<Point>>> abitilyDispatchers = new HashMap<>(); // Instance Dependant
+    private final Map<MeepleType, Function<Point, List<Point>>> abitilyDispatchers = new HashMap<>(); // Instance Dependant
     private List<MeepleType> played; // Game Dependant
     private Map<MeepleType, Integer> playing; // Turn Dependant
     private List<MeepleType> specialPlaying; // Turn Dependant
@@ -179,7 +180,7 @@ public class Player {
 
         return abitilyDispatchers
                 .get(meeple)
-                .get()
+                .apply(meeples.get(meeple))
                 .stream()
                 .filter(p -> !superSpeed.contains(p))
                 .toList();
@@ -230,10 +231,10 @@ public class Player {
         return empty();
     }
 
-    private List<Point> specialYellow() {
+    private List<Point> specialYellow(Point p) {
         return Arrays.stream(Direction.values())
                 .map(d -> new Tuple<>(d,
-                        moveWhilePossible(meeples.get(MeepleType.YELLOW), d)
+                        moveWhilePossible(p, d)
                 ))
                 .filter(t -> Utils.reachingWallFromDir(t.t1(), t.t2(), dim))
                 .map(t -> new Tuple<>(t.t1(), oppositeSide(t.t2(), t.t1())))
@@ -243,17 +244,16 @@ public class Player {
                 .toList();
     }
 
-    private List<Point> specialBlue() {
+    private List<Point> specialBlue(Point p) {
         return beams.stream()
                 .filter(this::isFree)
                 .toList();
     }
 
-    private List<Point> specialBrown() {
+    private List<Point> specialBrown(Point p) {
         return Arrays.stream(Direction.values())
                 .map(d -> {
-                    var point = meeples.get(MeepleType.BROWN);
-                    var cell = grid[point.y][point.x];
+                    var cell = grid[p.y][p.x];
                     var prevCell = cell;
 
                     while (!cell.hasWall(d)) {
@@ -271,11 +271,10 @@ public class Player {
                 .toList();
     }
 
-    private List<Point> specialRed() {
+    private List<Point> specialRed(Point p) {
         return Arrays.stream(Direction.values())
                 .map(d -> {
-                    var point = meeples.get(MeepleType.RED);
-                    var cell = grid[point.y][point.x];
+                    var cell = grid[p.y][p.x];
 
                     if (!cell.hasWall(d)) {
                         var nextPos = Utils.move(cell.pos, d);
@@ -289,10 +288,10 @@ public class Player {
                 .toList();
     }
 
-    private List<Point> specialGray() {
+    private List<Point> specialGray(Point p) {
         return Arrays.stream(Direction.values())
                 .map(d -> new Tuple<>(d,
-                        moveWhilePossible(meeples.get(MeepleType.GRAY), d)
+                        moveWhilePossible(p, d)
                 ))
                 .filter(t -> !Utils.reachingWallFromDir(t.t1(), t.t2(), dim))
                 .map(t -> new Tuple<>(t.t1(), Utils.move(t.t2(), t.t1())))
@@ -302,12 +301,10 @@ public class Player {
     }
 
 
-    private List<Point> specialGreen() {
+    private List<Point> specialGreen(Point p) {
         return Arrays.stream(Direction.values())
                 .map(d -> {
-                    var point = meeples.get(MeepleType.GREEN);
-
-                    var cell = grid[point.y][point.x];
+                    var cell = grid[p.y][p.x];
                     for (int i = 0; i < 3; i++) {
                         var nextPos = Utils.move(cell.pos, d);
                         if (Utils.outOfBounds(nextPos, dim))
@@ -322,7 +319,7 @@ public class Player {
                 .toList();
     }
 
-    private List<Point> specialWhite() {
+    private List<Point> specialWhite(Point p) {
         BiFunction<Point, Direction, Tuple3<Boolean, Point, Direction>> moveOne = (point, d) -> {
             var cell = grid[point.y][point.x];
 
@@ -335,7 +332,7 @@ public class Player {
         };
 
         return Arrays.stream(Direction.values())
-                .map(d -> moveOne.apply(meeples.get(MeepleType.WHITE), d))
+                .map(d -> moveOne.apply(p, d))
                 .filter(Tuple3::t1)
                 .flatMap(t3 -> Utils.orthogonalOf(t3.t3()).map(d -> moveOne.apply(t3.t2(), d)))
                 .filter(Tuple3::t1)
@@ -346,13 +343,12 @@ public class Player {
                 .toList();
     }
 
-    private List<Point> specialBlack() {
-
-
+    private List<Point> specialBlack(Point p) {
         return Arrays.stream(MeepleType.values())
                 .filter(type -> type != MeepleType.BLACK) // Avoid Recursive call
                 .filter(this::canPlaySpecial)
-                .flatMap(type -> specialAbility(type).stream())
+                .map(abitilyDispatchers::get)
+                .flatMap(ability -> ability.apply(p).stream())
                 .collect(toSet())
                 .stream()
                 .toList();
