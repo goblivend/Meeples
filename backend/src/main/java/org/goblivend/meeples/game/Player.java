@@ -225,6 +225,7 @@ public class Player {
         meeples.put(meeple, p);
 
         if (p.equals(target)) {
+            // TODO: Only put meeple in use when game validates solution as best in turn
             use(meeple);
         }
 

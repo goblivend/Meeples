@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
 
 @ApplicationScoped
 public class GameService {

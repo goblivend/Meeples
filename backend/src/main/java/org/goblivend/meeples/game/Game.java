@@ -19,11 +19,6 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.goblivend.meeples.game.Direction.*;
 
-/*
- * TODO: Create WebService
- */
-
-
 public class Game {
     private static final Logger LOGGER = LoggerFactory.getLogger(Game.class);
     private final Random rd = new Random();
@@ -62,8 +57,9 @@ public class Game {
                 .boxed()
                 .collect(toMap(i -> MeepleType.values()[i], spawns::get));
 
-        //        generateTarget();
-        target = new Point(2, 0); // TODO: Change back to random
+        // TODO: Change back to random
+        // generateTarget();
+        target = new Point(2, 0);
 
 
         this.players = new HashMap<>();
