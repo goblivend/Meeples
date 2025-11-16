@@ -9,7 +9,27 @@
 </head>
 
 <body>
-    <h1>Mutant Meeples Game</h1>
+    <!-- Server Configuration Popup -->
+    <div id="serverConfigModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Server Configuration</h3>
+            <form id="serverConfigForm">
+                <label for="serverUrlInput">Server URL:</label>
+                <input type="url" id="serverUrlInput" name="serverUrlInput" required>
+                <br>
+                <div class="modal-buttons">
+                    <button type="submit">Connect</button>
+                    <button type="button" id="useDefaultUrl">Use Default</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1400px; margin: 20px 0;">
+        <h1 style="margin: 0;">Mutant Meeples Game</h1>
+        <button id="settingsButton" class="settings-btn" title="Server Settings">⚙️ Settings</button>
+    </div>
 
     <div style="display: flex;">
         <div style="flex: 1; margin: 20px 20px; ">
@@ -35,7 +55,7 @@
 
             <form id="HelloWorldForm">
                 <h2>Test Hello Endpoint</h2>
-                <button id="helloButton">Call Hello World</button>
+                <button type="button" id="helloButton">Call Hello World</button>
                 <p id="helloResult"></p>
             </form>
         </div>

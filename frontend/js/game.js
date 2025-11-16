@@ -1,10 +1,12 @@
 console.log('Scripts loading');
 
 console.log('Game interface loaded');
+console.log('Server URL:', sessionStorage.getItem('serverUrl'));
 console.log('Game ID:', sessionStorage.getItem('gameId'));
 console.log('User Name:', sessionStorage.getItem('userName'));
 console.log('User Id:', sessionStorage.getItem('userId'));
 
+const serverUrl = sessionStorage.getItem('serverUrl');
 const gameId = sessionStorage.getItem('gameId');
 const userName = sessionStorage.getItem('userName');
 const userId = sessionStorage.getItem('userId');
