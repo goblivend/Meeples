@@ -1,0 +1,114 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1,
+h2 {
+    color: #4a4a4a;
+}
+
+h1 {
+    margin-top: 20px;
+}
+
+/* Container Styles */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 95%;
+    max-width: 1400px;
+    margin: 20px auto;
+}
+
+.section {
+    flex: 1;
+    margin: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    min-width: 300px;
+}
+
+.section:hover {
+    transform: translateY(-5px);
+}
+
+/* Form Styles */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+input {
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007BFF;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Error Message */
+#connectError {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* Games List */
+#gamesList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#gamesList li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+#gamesList li:last-child {
+    border-bottom: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .section {
+        width: 100%;
+        max-width: 600px;
+    }
+}

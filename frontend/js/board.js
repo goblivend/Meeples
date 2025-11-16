@@ -1,48 +1,25 @@
 function drawBoard(data) {
-    console.log(data)
-
-    const totalWidth = document.documentElement.clientWidth;
-    const totalHeight = document.documentElement.clientHeight - 160;
-
-    console.log(`Total Dimensions ${totalWidth}, ${totalHeight}`);
-
+    const gameBoardCanvas = document.getElementById('gameBoard');
     const canvas = document.getElementById('backBoard');
 
-    const gameBoardCanvas = document.getElementById('gameBoard');
-
-
-    // TODO: Set the canvas width and height based on the board data
-    const minDim = Math.min(totalWidth, totalHeight);
-
-    console.log(minDim);
-
-    gameBoardCanvas.width = minDim ;
-    gameBoardCanvas.height = minDim ;
-    gameBoardCanvas.style.height = `${minDim}px`;
+    // Set the canvas width and height based on the board data
+    const minDim = Math.min(gameBoardCanvas.clientWidth, gameBoardCanvas.clientHeight);
     gameBoardCanvas.style.width = `${minDim}px`;
+    gameBoardCanvas.style.height = `${minDim}px`;
 
-
-    const cellSize = gameBoardCanvas.width / data.width;
+    const cellSize = gameBoardCanvas.clientWidth / data.width;
     sessionStorage.setItem('cellSize', cellSize);
-    console.log(`Set Cellsize to : ${cellSize}`)
 
-    canvas.width = gameBoardCanvas.width;
-    canvas.height = gameBoardCanvas.height;
+    canvas.width = gameBoardCanvas.clientWidth;
+    canvas.height = gameBoardCanvas.clientHeight;
 
     const meeplesCanvas = document.getElementById('meeples');
-    meeplesCanvas.width = gameBoardCanvas.width;
-    meeplesCanvas.height = gameBoardCanvas.height;
+    meeplesCanvas.width = gameBoardCanvas.clientWidth;
+    meeplesCanvas.height = gameBoardCanvas.clientHeight;
 
     const movesCanvas = document.getElementById('moves');
-    movesCanvas.width = gameBoardCanvas.width;
-    movesCanvas.height = gameBoardCanvas.height;
-
-    // TODO: Center the canvas and update the board element width to leave space for subcomponents
-    // const newWidth = canvas.width + 2 * offsetX;
-    // boardElement.style.width = `${newWidth}px`;
-    // console.log('Updated Width:', newWidth);
-    // console.log('Updated Width:', boardElement.offsetWidth);
-
+    movesCanvas.width = gameBoardCanvas.clientWidth;
+    movesCanvas.height = gameBoardCanvas.clientHeight;
 
     const ctx = canvas.getContext('2d');
 
@@ -83,12 +60,10 @@ function drawBoard(data) {
         for (let x = 0; x < data.width; x++) {
             const cell = data.board[y][x];
             if (cell.wallDown) {
-                // Draw a wall at the bottom of the cell
                 ctx.fillStyle = 'black';
                 ctx.fillRect(x * cellSize - ctx.lineWidth / 4, (y + 1) * cellSize - ctx.lineWidth / 4, cellSize + ctx.lineWidth / 2, ctx.lineWidth / 2);
             }
             if (cell.wallRight) {
-                // Draw a wall at the right of the cell
                 ctx.fillStyle = 'black';
                 ctx.fillRect((x + 1) * cellSize - ctx.lineWidth / 4, y * cellSize - ctx.lineWidth / 4, ctx.lineWidth / 2, cellSize + ctx.lineWidth / 2);
             }
@@ -103,7 +78,7 @@ function drawBoard(data) {
         ctx.fill();
     });
 
-    // Same for the spawns but width light gray
+    // Same for the spawns but with light gray
     ctx.fillStyle = 'lightgray';
     data.spawns.forEach(spawn => {
         ctx.beginPath();
@@ -111,8 +86,7 @@ function drawBoard(data) {
         ctx.fill();
     });
 
-    // Draw the target like an archery target (concentric red and white circles) the first circle should be the biggest then the second one should be smaller and the third one should be the smallest
-
+    // Draw the target
     ctx.fillStyle = 'red';
     ctx.beginPath();
     ctx.arc((data.target.x + 0.5) * cellSize, (data.target.y + 0.5) * cellSize, cellSize / 3, 0, 2 * Math.PI);
@@ -129,59 +103,41 @@ function drawBoard(data) {
     ctx.fill();
 }
 
-// function intToRGBColor(intColor) {
-//     const red = (intColor >> 16) & 0xFF;
-//     const green = (intColor >> 8) & 0xFF;
-//     const blue = intColor & 0xFF;
-//     return `rgb(${red}, ${green}, ${blue})`;
-// }
 
 function drawMeeples(data) {
     const cellSize = sessionStorage.getItem('cellSize');
-
     const canvas = document.getElementById('meeples');
     const ctx = canvas.getContext('2d');
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    meeplesPos = []
-
-    // Draw the meeple as colored circles at the center of the cells
+    let meeplesPos = [];
     data.forEach(meeple => {
         meeplesPos.push(meeple.pos);
         ctx.fillStyle = getMeepleColor(meeple.name);
-        // console.log(intToRGBColor(meeple.color))
         ctx.beginPath();
         ctx.arc((meeple.pos.x + 0.5) * cellSize, (meeple.pos.y + 0.5) * cellSize, cellSize / 3, 0, 2 * Math.PI);
         ctx.fill();
     });
 
-    sessionStorage.setItem('meeplesPos', JSON.stringify(meeplesPos))
-
+    sessionStorage.setItem('meeplesPos', JSON.stringify(meeplesPos));
 }
 
-
 function drawMoves(moves) {
-    console.log(moves)
     const cellSize = sessionStorage.getItem('cellSize');
-
     const canvas = document.getElementById('moves');
     const ctx = canvas.getContext('2d');
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const selected = sessionStorage.getItem('selectedMeeple');
     const selectedMeeple = JSON.parse(selected);
 
     moves.basicMoves.forEach(move => {
-        console.log(move)
-        drawPolygon(ctx, movePolygon(createCursor(cellSize*3/4), move), 'rgb(255, 200, 3)')
-    })
+        drawPolygon(ctx, movePolygon(createCursor(cellSize * 3 / 4), move), 'rgb(255, 200, 3)');
+    });
 
     moves.specialMoves.forEach(move => {
-        drawPolygon(ctx, movePolygon(createCursor(cellSize*3/4), move),'rgb(228, 250, 142)');
-    })
+        drawPolygon(ctx, movePolygon(createCursor(cellSize * 3 / 4), move), 'rgb(228, 250, 142)');
+    });
 
-
-    drawPolygon(ctx, movePolygon(createCursor(cellSize*3/4), selectedMeeple),'rgb(255, 0, 255)');
+    drawPolygon(ctx, movePolygon(createCursor(cellSize * 3 / 4), selectedMeeple), 'rgb(255, 0, 255)');
 }
